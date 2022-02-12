@@ -1,0 +1,577 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "something.py",
+      "provenance": [],
+      "collapsed_sections": [],
+      "authorship_tag": "ABX9TyOWhYCQ1FDiZqd/Tg1FERIb",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Byankap/Amazon_Vine_Analysis/blob/main/pyspark_basics_py\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 2,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "vUM0SMsm3FMk",
+        "outputId": "02427b35-6624-41a3-b7c1-8c36355704fb"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\r0% [Working]\r            \rGet:1 http://security.ubuntu.com/ubuntu bionic-security InRelease [88.7 kB]\n",
+            "\r0% [Connecting to archive.ubuntu.com (91.189.88.152)] [1 InRelease 0 B/88.7 kB \r0% [Waiting for headers] [Waiting for headers] [Waiting for headers] [Connectin\r                                                                               \rGet:2 https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/ InRelease [3,626 B]\n",
+            "\r0% [Waiting for headers] [Waiting for headers] [Connecting to developer.downloa\r0% [1 InRelease gpgv 88.7 kB] [Waiting for headers] [Waiting for headers] [Conn\r                                                                               \rGet:3 http://ppa.launchpad.net/c2d4u.team/c2d4u4.0+/ubuntu bionic InRelease [15.9 kB]\n",
+            "Hit:4 http://archive.ubuntu.com/ubuntu bionic InRelease\n",
+            "Get:5 http://archive.ubuntu.com/ubuntu bionic-updates InRelease [88.7 kB]\n",
+            "Hit:6 http://ppa.launchpad.net/cran/libgit2/ubuntu bionic InRelease\n",
+            "Get:7 http://security.ubuntu.com/ubuntu bionic-security/main amd64 Packages [2,564 kB]\n",
+            "Get:8 http://archive.ubuntu.com/ubuntu bionic-backports InRelease [74.6 kB]\n",
+            "Hit:9 http://ppa.launchpad.net/deadsnakes/ppa/ubuntu bionic InRelease\n",
+            "Get:10 http://security.ubuntu.com/ubuntu bionic-security/restricted amd64 Packages [783 kB]\n",
+            "Get:11 http://security.ubuntu.com/ubuntu bionic-security/universe amd64 Packages [1,468 kB]\n",
+            "Get:12 http://security.ubuntu.com/ubuntu bionic-security/multiverse amd64 Packages [21.1 kB]\n",
+            "Ign:13 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64  InRelease\n",
+            "Get:14 http://ppa.launchpad.net/graphics-drivers/ppa/ubuntu bionic InRelease [21.3 kB]\n",
+            "Ign:15 https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64  InRelease\n",
+            "Get:16 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64  Release [696 B]\n",
+            "Hit:17 https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64  Release\n",
+            "Get:18 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64  Release.gpg [836 B]\n",
+            "Get:19 http://ppa.launchpad.net/c2d4u.team/c2d4u4.0+/ubuntu bionic/main Sources [1,825 kB]\n",
+            "Get:20 http://archive.ubuntu.com/ubuntu bionic-updates/restricted amd64 Packages [816 kB]\n",
+            "Get:21 http://archive.ubuntu.com/ubuntu bionic-updates/multiverse amd64 Packages [29.0 kB]\n",
+            "Get:22 http://archive.ubuntu.com/ubuntu bionic-updates/main amd64 Packages [3,004 kB]\n",
+            "Get:23 http://ppa.launchpad.net/c2d4u.team/c2d4u4.0+/ubuntu bionic/main amd64 Packages [935 kB]\n",
+            "Get:24 http://archive.ubuntu.com/ubuntu bionic-updates/universe amd64 Packages [2,247 kB]\n",
+            "Get:26 http://ppa.launchpad.net/graphics-drivers/ppa/ubuntu bionic/main amd64 Packages [42.8 kB]\n",
+            "Get:27 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64  Packages [917 kB]\n",
+            "Fetched 14.9 MB in 4s (3,432 kB/s)\n",
+            "Reading package lists... Done\n"
+          ]
+        }
+      ],
+      "source": [
+        "import os\n",
+        "# Find the latest version of spark 3.0 from http://www.apache.org/dist/spark/ and enter as the spark version\n",
+        "# For example:\n",
+        "# spark_version = 'spark-3.0.3'\n",
+        "spark_version = 'spark-3.0.3'\n",
+        "os.environ['SPARK_VERSION']=spark_version\n",
+        "\n",
+        "# Install Spark and Java\n",
+        "!apt-get update\n",
+        "!apt-get install openjdk-11-jdk-headless -qq > /dev/null\n",
+        "!wget -q http://www.apache.org/dist/spark/$SPARK_VERSION/$SPARK_VERSION-bin-hadoop2.7.tgz\n",
+        "!tar xf $SPARK_VERSION-bin-hadoop2.7.tgz\n",
+        "!pip install -q findspark\n",
+        "\n",
+        "# Set Environment Variables\n",
+        "import os\n",
+        "os.environ[\"JAVA_HOME\"] = \"/usr/lib/jvm/java-11-openjdk-amd64\"\n",
+        "os.environ[\"SPARK_HOME\"] = f\"/content/{spark_version}-bin-hadoop2.7\"\n",
+        "\n",
+        "# Start a SparkSession\n",
+        "import findspark\n",
+        "findspark.init()\n",
+        "\n",
+        "\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Start Spark session\n",
+        "from pyspark.sql import SparkSession\n",
+        "spark = SparkSession.builder.appName(\"TF-IDF\").getOrCreate()\n"
+      ],
+      "metadata": {
+        "id": "B8ltDYsL8opK"
+      },
+      "execution_count": 3,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from pyspark.ml.feature import HashingTF, IDF, Tokenizer, StopWordsRemover\n"
+      ],
+      "metadata": {
+        "id": "bkTtiuTl9IE2"
+      },
+      "execution_count": 4,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Read in data from S3 Buckets\n",
+        "from pyspark import SparkFiles\n",
+        "url =\"https://s3.amazonaws.com/dataviz-curriculum/day_2/airlines.csv\"\n",
+        "spark.sparkContext.addFile(url)\n",
+        "df = spark.read.csv(SparkFiles.get(\"airlines.csv\"), sep=\",\", header=True)\n",
+        "\n",
+        "# Show DataFrame\n",
+        "df.show()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "_fBgIzf39R1G",
+        "outputId": "01f37d9d-e666-43f9-d0bc-fb19c666e903"
+      },
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "+--------------------+\n",
+            "|      Airline Tweets|\n",
+            "+--------------------+\n",
+            "|@VirginAmerica pl...|\n",
+            "|@VirginAmerica se...|\n",
+            "|@VirginAmerica do...|\n",
+            "|@VirginAmerica Ar...|\n",
+            "|@VirginAmerica aw...|\n",
+            "+--------------------+\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Tokenize DataFrame\n",
+        "tokened = Tokenizer(inputCol=\"Airline Tweets\", outputCol=\"words\")\n",
+        "tokened_transformed = tokened.transform(df)\n",
+        "tokened_transformed.show()\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "rSxlw8LTA8cj",
+        "outputId": "14876c25-a368-4b6e-8419-740ef931d273"
+      },
+      "execution_count": 6,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "+--------------------+--------------------+\n",
+            "|      Airline Tweets|               words|\n",
+            "+--------------------+--------------------+\n",
+            "|@VirginAmerica pl...|[@virginamerica, ...|\n",
+            "|@VirginAmerica se...|[@virginamerica, ...|\n",
+            "|@VirginAmerica do...|[@virginamerica, ...|\n",
+            "|@VirginAmerica Ar...|[@virginamerica, ...|\n",
+            "|@VirginAmerica aw...|[@virginamerica, ...|\n",
+            "+--------------------+--------------------+\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Remove stop words\n",
+        "remover = StopWordsRemover(inputCol=\"words\", outputCol=\"filtered\")\n",
+        "removed_frame = remover.transform(tokened_transformed)\n",
+        "removed_frame.show(truncate=False)\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "WiLljOPMBAkE",
+        "outputId": "78cccbe5-855d-40d5-bce7-d1933d6421b8"
+      },
+      "execution_count": 7,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "+---------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------+\n",
+            "|Airline Tweets                                                                                                                         |words                                                                                                                                                          |filtered                                                                                       |\n",
+            "+---------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------+\n",
+            "|@VirginAmerica plus you've added commercials to the experience... tacky.                                                               |[@virginamerica, plus, you've, added, commercials, to, the, experience..., tacky.]                                                                             |[@virginamerica, plus, added, commercials, experience..., tacky.]                              |\n",
+            "|@VirginAmerica seriously would pay $30 a flight for seats that didn't have this playing. it's really the only bad thing about flying VA|[@virginamerica, seriously, would, pay, $30, a, flight, for, seats, that, didn't, have, this, playing., it's, really, the, only, bad, thing, about, flying, va]|[@virginamerica, seriously, pay, $30, flight, seats, playing., really, bad, thing, flying, va] |\n",
+            "|@VirginAmerica do you miss me? Don't worry we'll be together very soon.                                                                |[@virginamerica, do, you, miss, me?, don't, worry, we'll, be, together, very, soon.]                                                                           |[@virginamerica, miss, me?, worry, together, soon.]                                            |\n",
+            "|@VirginAmerica Are the hours of operation for the Club at SFO that are posted online current?                                          |[@virginamerica, are, the, hours, of, operation, for, the, club, at, sfo, that, are, posted, online, current?]                                                 |[@virginamerica, hours, operation, club, sfo, posted, online, current?]                        |\n",
+            "|@VirginAmerica awaiting my return phone call, just would prefer to use your online self-service option :(                              |[@virginamerica, awaiting, my, return, phone, call,, just, would, prefer, to, use, your, online, self-service, option, :(]                                     |[@virginamerica, awaiting, return, phone, call,, prefer, use, online, self-service, option, :(]|\n",
+            "+---------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------+\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#run the hashing term frequency\n",
+        "hashing = HashingTF(inputCol='filtered', outputCol='hashedValues', numFeatures=pow(2,18))\n",
+        "#transform into a Df\n",
+        "hashed_df=hashing.transform(removed_frame)\n",
+        "hashed_df.show(truncate=False)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "qUE5Un8CBRvj",
+        "outputId": "49c268fc-f111-49df-8fc4-c4cb2d007c9e"
+      },
+      "execution_count": 8,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "+---------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+\n",
+            "|Airline Tweets                                                                                                                         |words                                                                                                                                                          |filtered                                                                                       |hashedValues                                                                                                                               |\n",
+            "+---------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+\n",
+            "|@VirginAmerica plus you've added commercials to the experience... tacky.                                                               |[@virginamerica, plus, you've, added, commercials, to, the, experience..., tacky.]                                                                             |[@virginamerica, plus, added, commercials, experience..., tacky.]                              |(262144,[1419,99916,168274,171322,186669,256498],[1.0,1.0,1.0,1.0,1.0,1.0])                                                                |\n",
+            "|@VirginAmerica seriously would pay $30 a flight for seats that didn't have this playing. it's really the only bad thing about flying VA|[@virginamerica, seriously, would, pay, $30, a, flight, for, seats, that, didn't, have, this, playing., it's, really, the, only, bad, thing, about, flying, va]|[@virginamerica, seriously, pay, $30, flight, seats, playing., really, bad, thing, flying, va] |(262144,[30053,44911,70065,94512,99549,145380,166947,171322,178915,229264,237593,239713],[1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0])|\n",
+            "|@VirginAmerica do you miss me? Don't worry we'll be together very soon.                                                                |[@virginamerica, do, you, miss, me?, don't, worry, we'll, be, together, very, soon.]                                                                           |[@virginamerica, miss, me?, worry, together, soon.]                                            |(262144,[107065,117975,147224,171322,200547,232735],[1.0,1.0,1.0,1.0,1.0,1.0])                                                             |\n",
+            "|@VirginAmerica Are the hours of operation for the Club at SFO that are posted online current?                                          |[@virginamerica, are, the, hours, of, operation, for, the, club, at, sfo, that, are, posted, online, current?]                                                 |[@virginamerica, hours, operation, club, sfo, posted, online, current?]                        |(262144,[9641,50671,83962,96266,171322,181964,192171,220194],[1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0])                                            |\n",
+            "|@VirginAmerica awaiting my return phone call, just would prefer to use your online self-service option :(                              |[@virginamerica, awaiting, my, return, phone, call,, just, would, prefer, to, use, your, online, self-service, option, :(]                                     |[@virginamerica, awaiting, return, phone, call,, prefer, use, online, self-service, option, :(]|(262144,[6122,50509,50671,67607,98717,121947,128077,171322,225517,234877,261675],[1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0])            |\n",
+            "+---------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#fit the IDF on the data set\n",
+        "idf = IDF(inputCol='hashedValues', outputCol='features')\n",
+        "idfModel = idf.fit(hashed_df)\n",
+        "rescaled"
+      ],
+      "metadata": {
+        "id": "DHv8sBd8Da4b"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        " # Start Spark session\n",
+        "from pyspark.sql import SparkSession\n",
+        "spark = SparkSession.builder.appName(\"StopWords\").getOrCreate()"
+      ],
+      "metadata": {
+        "id": "M1_Ol1Zwawei"
+      },
+      "execution_count": 14,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#create dataframe\n",
+        "sentenceData = spark.createDataFrame([\n",
+        "  (0, ['Big', 'data', 'is', 'super', 'powerful']),\n",
+        "  (1, ['This', 'is', 'going', 'to', 'be', 'epic'])                                      \n",
+        "], ['id', 'raw'])\n",
+        "sentenceData.show(truncate=False)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "D6KdhSdZbHgQ",
+        "outputId": "e3438a76-462b-4c4f-e55a-d04a6c7226bc"
+      },
+      "execution_count": 15,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "+---+--------------------------------+\n",
+            "|id |raw                             |\n",
+            "+---+--------------------------------+\n",
+            "|0  |[Big, data, is, super, powerful]|\n",
+            "|1  |[This, is, going, to, be, epic] |\n",
+            "+---+--------------------------------+\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Import stop words library\n",
+        "from pyspark.ml.feature import StopWordsRemover"
+      ],
+      "metadata": {
+        "id": "Yz0shAdrcj_L"
+      },
+      "execution_count": 16,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#run remover\n",
+        "remover = StopWordsRemover(inputCol='raw', outputCol='filtered')\n",
+        "#transform data and show\n",
+        "remover.transform(sentenceData).show(truncate=False)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "VhzefucEcrma",
+        "outputId": "3bec35ed-28e4-407a-b14c-2a6ef350c0d2"
+      },
+      "execution_count": 18,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "+---+--------------------------------+----------------------------+\n",
+            "|id |raw                             |filtered                    |\n",
+            "+---+--------------------------------+----------------------------+\n",
+            "|0  |[Big, data, is, super, powerful]|[Big, data, super, powerful]|\n",
+            "|1  |[This, is, going, to, be, epic] |[going, epic]               |\n",
+            "+---+--------------------------------+----------------------------+\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Start Spark session\n",
+        "from pyspark.sql import SparkSession\n",
+        "spark = SparkSession.builder.appName(\"Tokens\").getOrCreate()"
+      ],
+      "metadata": {
+        "id": "wsL08VNTTs2S"
+      },
+      "execution_count": 4,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from pyspark.ml.feature import Tokenizer"
+      ],
+      "metadata": {
+        "id": "IsEBGu0QWa54"
+      },
+      "execution_count": 5,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Tokenize sentences\n",
+        "tokenizer = Tokenizer(inputCol=\"sentence\", outputCol=\"words\")\n",
+        "tokenizer"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "U86AfmVKTm1Z",
+        "outputId": "92387aa8-7ddd-4aac-ff55-08604cd2a1b4"
+      },
+      "execution_count": 6,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "Tokenizer_7239f31611eb"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 6
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#create a dataframe\n",
+        "dataframe = spark.createDataFrame([\n",
+        "  (0, 'Spark is great'),\n",
+        "  (1,'We are learning Spark'),\n",
+        "  (2,'Spark is better than hadoop')                                 \n",
+        "], ['id', 'sentence'])\n",
+        "dataframe.show()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "X4zRDicHUQkt",
+        "outputId": "b0413d06-4279-461d-e3dd-aad16218fdf1"
+      },
+      "execution_count": 8,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "+---+--------------------+\n",
+            "| id|            sentence|\n",
+            "+---+--------------------+\n",
+            "|  0|      Spark is great|\n",
+            "|  1|We are learning S...|\n",
+            "|  2|Spark is better t...|\n",
+            "+---+--------------------+\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "tokenized_df = tokenizer.transform(dataframe)\n",
+        "tokenized_df.show(truncate=False)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "XusC_SrmToJY",
+        "outputId": "e2b3225a-117e-4581-ac96-21790905abb2"
+      },
+      "execution_count": 9,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "+---+---------------------------+---------------------------------+\n",
+            "|id |sentence                   |words                            |\n",
+            "+---+---------------------------+---------------------------------+\n",
+            "|0  |Spark is great             |[spark, is, great]               |\n",
+            "|1  |We are learning Spark      |[we, are, learning, spark]       |\n",
+            "|2  |Spark is better than hadoop|[spark, is, better, than, hadoop]|\n",
+            "+---+---------------------------+---------------------------------+\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# fucntion to retun the len of list\n",
+        "def word_list_length(word_list):\n",
+        "  return len(word_list)"
+      ],
+      "metadata": {
+        "id": "nIRKI6WVUI6q"
+      },
+      "execution_count": 10,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from pyspark.sql.functions import col, udf\n",
+        "from pyspark.sql.types import IntegerType"
+      ],
+      "metadata": {
+        "id": "_7IjyuBUV13X"
+      },
+      "execution_count": 11,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Create a user defined function\n",
+        "count_tokens = udf(word_list_length, IntegerType())"
+      ],
+      "metadata": {
+        "id": "Cq3d6SCjV-2A"
+      },
+      "execution_count": 12,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "#select needed columns and dont truncate results\n",
+        "tokenized_df.withColumn('tokens', count_tokens(col('words'))).show(truncate=False)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "kGsWXzvmWUQP",
+        "outputId": "f217c612-aeea-4f4e-98a5-526b3ef7032c"
+      },
+      "execution_count": 13,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "+---+---------------------------+---------------------------------+------+\n",
+            "|id |sentence                   |words                            |tokens|\n",
+            "+---+---------------------------+---------------------------------+------+\n",
+            "|0  |Spark is great             |[spark, is, great]               |3     |\n",
+            "|1  |We are learning Spark      |[we, are, learning, spark]       |4     |\n",
+            "|2  |Spark is better than hadoop|[spark, is, better, than, hadoop]|5     |\n",
+            "+---+---------------------------+---------------------------------+------+\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        ""
+      ],
+      "metadata": {
+        "id": "LodCDMicW_sa"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
